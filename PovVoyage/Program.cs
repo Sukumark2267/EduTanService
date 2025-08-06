@@ -7,6 +7,7 @@ using PovVoyage.Data.Repositories;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Serilog;
 using Serilog.Extensions.Hosting;
+using System.Configuration;
 
 var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Logs", "app-log.txt");
 
@@ -49,14 +50,20 @@ builder.Services.AddCors(options =>
 });
 
 // Register data context
+//builder.Services.AddDbContext<PovVoyageContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+//    {
+//        sqlOptions.EnableRetryOnFailure(
+//            maxRetryCount: 5,
+//            maxRetryDelay: TimeSpan.FromSeconds(30),
+//            errorNumbersToAdd: null);
+//    }));
+
 builder.Services.AddDbContext<PovVoyageContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
-    }));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        x => x.MigrationsAssembly("PovVoyage.Data")));
+
+
 
 // Register repositories if using repository pattern
 builder.Services.AddScoped<IVideoRepository, VideoRepository>();
